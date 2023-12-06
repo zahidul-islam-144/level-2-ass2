@@ -3,27 +3,27 @@
 #### NOTE: Here userId will be 1 to 10. userId = 1,2,3......10
 
 ## Create User 
-#### POST : api/users
+#### POST : level-2-assignment-2-zislam.vercel.app/api/users
 
 ## Get All Users
-#### GET : api/users
+#### GET : level-2-assignment-2-zislam.vercel.app/api/users
 
 ## Get Single User
-#### GET : api/users/1
+#### GET : level-2-assignment-2-zislam.vercel.app/api/users/1
 
 ## Delete Single User
-#### DELETE : api/users/1
+#### DELETE : level-2-assignment-2-zislam.vercel.app/api/users/1
 
 ## Update Single User
-#### PUT : api/users/1
+#### PUT : level-2-assignment-2-zislam.vercel.app/api/users/1
 
 # Bonus section
 
 ## Get All Orders of a Single User
-#### GET : api/users/1/orders
+#### GET : level-2-assignment-2-zislam.vercel.app/api/users/1/orders
 
 ## Add Order
-#### PUT : api/users/1/orders
+#### PUT : level-2-assignment-2-zislam.vercel.app/api/users/1/orders
 
 ## Get Total Price of all orders of a Single User
-#### GET : api/users/1/orders/total-price
+#### GET : level-2-assignment-2-zislam.vercel.app/api/users/1/orders/total-price
