@@ -17,7 +17,7 @@
 ## Update Single User
 #### PUT : api/users/1
 
-#Bonus section
+# Bonus section
 
 ## Get All Orders of a Single User
 #### GET : api/users/1/orders
