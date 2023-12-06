@@ -81,7 +81,7 @@ const updateSingleUserByIdFromDB = async (
     updatedPass = isVerified
       ? user?.password
       : await passwordHandler.modifiedPassword();
-    // handle hashing whether password is updated or not. If updated, then isVerified will be true.
+    // handle hashing whether password is updated or not. If not updated, then isVerified will be true.
   }
 
   const duplicateHobbies = (reqInputData?.hobbies || []).filter(
