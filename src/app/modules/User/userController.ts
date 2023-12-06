@@ -9,7 +9,7 @@ const createUser = catchAsync(async (req, res) => {
 
   const customResponse = new CustomResponse(res);
   customResponse.sendResponse({
-    statusCode: 200,
+    statusCode: 201,
     success: true,
     message: 'User created successfully.',
     data: newUser,
@@ -24,7 +24,7 @@ const getAllUsers = catchAsync(
 
     const customResponse = new CustomResponse(res);
     customResponse.sendResponse({
-      statusCode: haveUsers ? 201 : 404,
+      statusCode: haveUsers ? 200 : 404,
       success: haveUsers ? true : false,
       message: haveUsers ? 'User fetched successfully!' : 'No user found.',
       data: haveUsers ? getAllUsers : [],
@@ -40,7 +40,7 @@ const getSingleUserById = catchAsync(
 
     const customResponse = new CustomResponse(res);
     customResponse.sendResponse({
-      statusCode: 201,
+      statusCode: 200,
       success: true,
       message: 'User fetched successfully!',
       data: foundUser,
@@ -55,7 +55,7 @@ const deleteSingleUserById = catchAsync(
 
     const customResponse = new CustomResponse(res);
     customResponse.sendResponse({
-      statusCode: 201,
+      statusCode: 200,
       success: true,
       message: 'User deleted successfully!',
       data: {},
@@ -76,7 +76,7 @@ const updateSingleUserById = catchAsync(
       const { _id, password, ...projectedData } = targetUser.toObject(); // excluding _id & password in response
       const customResponse = new CustomResponse(res);
       customResponse.sendResponse({
-        statusCode: 200,
+        statusCode: 201,
         success: true,
         message: 'User updated successfully!',
         data: projectedData,
@@ -97,8 +97,8 @@ const getAllOrdersOfSingleUser = catchAsync(
 
     const customResponse = new CustomResponse(res);
     customResponse.sendResponse({
-      statusCode: 200,
-      success: true,
+      statusCode: hasAnyOrder ? 200 : 404,
+      success: hasAnyOrder ? true : false,
       message: hasAnyOrder
         ? 'Order fetched successfully!'
         : 'No Orders found for this user. Kindly, add new order.',
@@ -119,7 +119,7 @@ const addOrderByUserId = catchAsync(
     if (targetUser?.modifiedCount) {
       const customResponse = new CustomResponse(res);
       customResponse.sendResponse({
-        statusCode: 200,
+        statusCode: 201,
         success: true,
         message: 'Order created successfully!',
         data: null,
