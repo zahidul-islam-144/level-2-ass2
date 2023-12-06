@@ -6,7 +6,6 @@ export default (schema: AnyZodObject) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const reqBody = req.body;
-      console.log('---> Validation:req', reqBody);
       await schema.parseAsync({
         body: reqBody,
       });
