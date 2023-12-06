@@ -71,7 +71,7 @@ const updateSingleUserById = catchAsync(
       +userId,
       reqBody,
     );
-    console.log('targetUser', targetUser);
+    
     if (targetUser) {
       const { _id, password, ...projectedData } = targetUser.toObject(); // excluding _id & password in response
       const customResponse = new CustomResponse(res);

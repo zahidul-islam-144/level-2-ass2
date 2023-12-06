@@ -12,10 +12,15 @@ const createUserIntoDB = async (userRequestData: IUser) => {
   );
   const finalPass = await passwordHandler.modifiedPassword();
 
-  const filteredDuplicateHobbies = userRequestData?.hobbies ? [...new Set(userRequestData?.hobbies)] : [];
+  const filteredDuplicateHobbies = userRequestData?.hobbies
+    ? [...new Set(userRequestData?.hobbies)]
+    : [];
 
-  const filteredDuplicateOrders = userRequestData?.orders?.filter((order, index, selfArray) =>
-    index === selfArray.findIndex((item) => item.productName === order.productName));
+  const filteredDuplicateOrders = userRequestData?.orders?.filter(
+    (order, index, selfArray) =>
+      index ===
+      selfArray.findIndex((item) => item.productName === order.productName),
+  );
 
   if (!isUserExist) {
     const { password, hobbies, orders, ...projectedData } = userRequestData;
@@ -79,24 +84,27 @@ const updateSingleUserByIdFromDB = async (
     // handle hashing whether password is updated or not. If updated, then isVerified will be true.
   }
 
-  const duplicateHobbies = (reqInputData?.hobbies || []).filter((newHobby) =>
-    (user?.hobbies || []).some((existingHobby) => existingHobby === newHobby),
+  const duplicateHobbies = (reqInputData?.hobbies || []).filter(
+    (newHobby, index) =>
+      (reqInputData?.hobbies || []).indexOf(newHobby) !== index,
   );
 
-  const duplicateOrders = (reqInputData?.orders || []).filter((newOrder) =>
-    (user?.orders || []).some(
-      (existingOrder) => existingOrder.productName === newOrder.productName,
-    ),
+  const duplicateOrders = reqInputData?.orders?.filter(
+    (order, index) =>
+      index !==
+      (reqInputData?.orders || []).findIndex(
+        (item) => item.productName === order.productName,
+      ),
   );
 
   if (
-    (duplicateHobbies &&
-    duplicateHobbies.length > 0) &&
-    (duplicateOrders &&
-    duplicateOrders.length > 0)
+    duplicateHobbies &&
+    duplicateHobbies.length > 0 &&
+    duplicateOrders &&
+    duplicateOrders.length > 0
   ) {
     throw new CustomError(
-      'Multiple duplicate data insrted. Please, insert unique data.',
+      'Multiple duplicate items such as hobbies or orders insrted. Please, insert unique item.',
       406,
       [...duplicateHobbies, ...duplicateOrders],
     );
@@ -168,13 +176,18 @@ const addOrderByUserIdIntoDB = async (
   reqInputData: IOrders,
 ) => {
   const isUserExist = await User.isUserExist(userId);
-  const isOrderExist = await User.find(
+  const getExistingorders = await User.findOne(
+    { userId },
     { orders: { $elemMatch: { productName: reqInputData?.productName } } },
     { orders: { productName: 1 } },
   );
+  const isExistOrder =
+    getExistingorders?.orders && getExistingorders?.orders?.length > 0
+      ? true
+      : false;
 
   if (isUserExist) {
-    if (isOrderExist.length === 0) {
+    if (!isExistOrder) {
       const targetUserOrder = await User.updateOne(
         { userId },
         {
