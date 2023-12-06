@@ -6,7 +6,7 @@ import {
   IUser,
   UserModel,
 } from './userInterface';
-import { PasswordStrategy } from '../../utils/templates';
+import { PasswordStrategy } from '../../utils/PasswordStrategy';
 
 const FullNameSchema = new Schema<IFullName>({
   firstName: {
@@ -79,6 +79,7 @@ const userSchema = new Schema<IUser, UserModel>({
   },
   email: {
     type: String,
+    unique: true,
     required: [true, 'Email is required.'],
   },
   isActive: {
@@ -107,14 +108,27 @@ userSchema.statics.isUserExist = async function (userId: number) {
   return existingUser;
 };
 
+// checking given password and database stored password are matching or not
+userSchema.statics.isVerified = async (userId: number, newPassword: string = '') => {
+  const user = await User.findOne({ userId });
+  const passwordHandler = new PasswordStrategy(
+    newPassword,
+    user?.password,
+    'VERIFY',
+  );
+  const finalPass = await passwordHandler.modifiedPassword();
+  return finalPass;
+}
+
+// Approach-1: To remove password
 //set password field undefined (cause mongoose document is readonly) when user wil get response after saving data into database.
 // userSchema.post<IUser>('save', function (doc, next) {
-//     console.log('after-saving data:doc::',doc)
 //     doc.password = '';
-//     console.log('after-deleting password::',doc)
 //     next();
 // });
 
+
+// Approach-2: To remove password
 //To override mongoose object, first converted as JSON object using set() method and then run delete operand to exlcude password field from the response object
 userSchema.set('toJSON', {
   transform: function (doc, returnObj) {
@@ -124,10 +138,5 @@ userSchema.set('toJSON', {
   },
 });
 
-// userSchema.statics.isVerifiedUser =async (userId: number) => {
-//     const getUser = await User.findOne({ userId });
-//     const passwordHandler = new PasswordStrategy(getUser?.password, this.password, 'VERIFY');
-//     return passwordHandler.modifiedPassword();
-// }
 
 export const User = model<IUser, UserModel>('User', userSchema);

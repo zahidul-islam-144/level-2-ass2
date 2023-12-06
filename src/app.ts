@@ -1,9 +1,8 @@
 import cors from 'cors';
-import express, { Application, NextFunction, Request, Response } from 'express';
+import express, { Application, Request } from 'express';
 import helmet from 'helmet';
-import { errorMiddleWare } from './app/middlewares/errorMiddleWare';
-import { ResponseTemplate } from './app/utils/templates';
 import userRouter from './app/modules/User/userRoutes';
+import { errorHandler } from './app/middlewares/errorHandlerMiddlware';
 const app: Application = express();
 
 //added middlewares
@@ -26,6 +25,6 @@ app.use('/api/users', userRouter);
 // })
 
 //global error middleware
-app.use(errorMiddleWare);
+app.use(errorHandler);
 
 export default app;

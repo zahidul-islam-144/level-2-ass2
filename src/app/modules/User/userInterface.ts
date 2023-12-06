@@ -25,13 +25,13 @@ export interface IUser {
     age: number;
     email: string;
     isActive: boolean;
-    hobbies: string[] | null;
+    hobbies?: string[];
     address: IAddress;
-    orders: IOrders[]
+    orders?: IOrders[]
 }
 
 
 export interface UserModel extends Model<IUser> {
     isUserExist(userId: number): Promise<IUser | null>;
-    isVerifiedUser(userId: number): Promise<IUser | null>
+    isVerified( userId: number, newPassword: string): Promise<boolean | undefined>;
   }

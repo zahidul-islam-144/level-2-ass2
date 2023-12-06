@@ -1,69 +1,159 @@
-import { NextFunction, Request, Response } from "express";
-import asyncMiddleWare from "../../middlewares/asyncMiddleWare";
-import { userService } from "./userService";
-import validateUserSchema from "./userValidate";
-import { ErrorResponse, ResponseTemplate, handleSafeParse } from "../../utils/templates";
-import { IUser } from "./userInterface";
-import { SafeParseReturnType, ZodError, ZodParsedType, ZodType } from "zod";
+import { NextFunction, Request, Response } from 'express';
+import { userService } from './userService';
+import catchAsync from '../../utils/catchAsync';
+import CustomResponse from '../../utils/CustomResponse';
 
-// type TSafeParse<T> =
-// | { success: true; data: T }
-// | { success: false; error: ZodError };
+const createUser = catchAsync(async (req, res) => {
+  const reqBody = req.body;
+  const newUser = await userService.createUserIntoDB(reqBody);
+
+  const customResponse = new CustomResponse(res);
+  customResponse.sendResponse({
+    statusCode: 200,
+    success: true,
+    message: 'User created successfully.',
+    data: newUser,
+  });
+});
 
 
-const createUser = asyncMiddleWare( async (req:Request, res:Response, next:NextFunction) => { 
+const getAllUsers = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const getAllUsers = await userService.getAllUsersFromDB();
+    const haveUsers = getAllUsers?.length > 0 ? true : false;
 
+    const customResponse = new CustomResponse(res);
+    customResponse.sendResponse({
+      statusCode: haveUsers ? 201 : 404,
+      success: haveUsers ? true : false,
+      message: haveUsers ? 'User fetched successfully!' : 'No user found.',
+      data: haveUsers ? getAllUsers : [],
+    });
+  },
+);
+
+
+const getSingleUserById = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+    const foundUser = await userService.getSingleUserByIdFromDB(+userId);
+
+    const customResponse = new CustomResponse(res);
+    customResponse.sendResponse({
+      statusCode: 201,
+      success: true,
+      message: 'User fetched successfully!',
+      data: foundUser,
+    });
+  },
+);
+
+const deleteSingleUserById = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+    const foundUser = await userService.deleteSingleUserByIdFromDB(+userId);
+
+    const customResponse = new CustomResponse(res);
+    customResponse.sendResponse({
+      statusCode: 201,
+      success: true,
+      message: 'User deleted successfully!',
+      data: {},
+    });
+  },
+);
+
+const updateSingleUserById = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
     const reqBody = req.body;
-    const zodParsedData = handleSafeParse<IUser>(reqBody, validateUserSchema);
-    const errorObjects = {...zodParsedData.error?.errors}
-    console.log('zodparse::',zodParsedData)
-  //  if(errorObjects) throw new ErrorResponse(errorObjects, 406)
-   return
-    const newUser = await userService.createUserIntoDB(reqBody);
-    
-    if(newUser){
-      const sendResponse = new ResponseTemplate(true, 201, 'User created successfully.', newUser);
-      res.send(sendResponse).end();
+    const targetUser = await userService.updateSingleUserByIdFromDB(
+      +userId,
+      reqBody,
+    );
+    console.log('targetUser', targetUser);
+    if (targetUser) {
+      const { _id, password, ...projectedData } = targetUser.toObject(); // excluding _id & password in response
+      const customResponse = new CustomResponse(res);
+      customResponse.sendResponse({
+        statusCode: 200,
+        success: true,
+        message: 'User updated successfully!',
+        data: projectedData,
+      });
     }
-})
+  },
+);
 
-const getSingleUserById = asyncMiddleWare( async (req:Request, res:Response, next:NextFunction)=>{
-  const { userId } = req.params;
-  const foundUser = await userService.getSingleUserByIdFromDB(+userId);
+const getAllOrdersOfSingleUser = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+    const foundAllOrders =
+      await userService.getAllOrdersOfSingleUserFromDB(+userId);
+    const hasAnyOrder: boolean =
+      foundAllOrders?.orders && foundAllOrders?.orders?.length > 0
+        ? true
+        : false;
 
-  if(foundUser){
-    const sendResponse = new ResponseTemplate(true, 201, 'User fetched successfully!', foundUser);
-    res.send(sendResponse).end();
-  }
+    const customResponse = new CustomResponse(res);
+    customResponse.sendResponse({
+      statusCode: 200,
+      success: true,
+      message: hasAnyOrder
+        ? 'Order fetched successfully!'
+        : 'No Orders found for this user. Kindly, add new order.',
+      data: hasAnyOrder ? foundAllOrders : [],
+    });
+  },
+);
 
-})
+const addOrderByUserId = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+    const reqBody = req.body;
+    const targetUser = await userService.addOrderByUserIdIntoDB(
+      +userId,
+      reqBody,
+    );
 
-const getAllUsers = asyncMiddleWare( async (req:Request, res:Response, next:NextFunction)=>{
-  const foundUsers = await userService.getAllUsersFromDB();
+    if (targetUser?.modifiedCount) {
+      const customResponse = new CustomResponse(res);
+      customResponse.sendResponse({
+        statusCode: 200,
+        success: true,
+        message: 'Order created successfully!',
+        data: null,
+      });
+    }
+  },
+);
 
-  if(foundUsers){
-    const sendResponse = new ResponseTemplate(true, 201, 'User fetched successfully!', foundUsers);
-    res.send(sendResponse).end();
-  }
+const getTotalPriceOfSingleUser = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+    const getTotalPrice =
+      await userService.getTotalPriceOfSingleUserFromDB(+userId);
+    const hasPrice = getTotalPrice?.length > 0 ? true : false;
 
-})
-
-const deleteSingleUserById = asyncMiddleWare( async (req:Request, res:Response, next:NextFunction) => {
-  const { userId } = req.params;
-  const foundUser = await userService.deleteSingleUserByIdFromDB(+userId);
-  
-  if(foundUser){
-    const sendResponse = new ResponseTemplate(true, 201, 'User deleted successfully!', foundUser);
-    res.send(sendResponse).end();
-  }
-
-})
-
-
+    const customResponse = new CustomResponse(res);
+    customResponse.sendResponse({
+      statusCode: 200,
+      success: true,
+      message: hasPrice
+        ? 'Total price calculated successfully!'
+        : 'No Orders found for this user. Kindly, add new order.',
+      data: hasPrice ? getTotalPrice[0] : [],
+    });
+  },
+);
 
 export const userController = {
-    createUser,
-    getSingleUserById,
-    getAllUsers,
-    deleteSingleUserById
-}
+  createUser,
+  getSingleUserById,
+  getAllUsers,
+  deleteSingleUserById,
+  updateSingleUserById,
+  getAllOrdersOfSingleUser,
+  addOrderByUserId,
+  getTotalPriceOfSingleUser,
+};
