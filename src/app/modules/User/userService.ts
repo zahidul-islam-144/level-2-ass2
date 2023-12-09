@@ -124,8 +124,8 @@ const updateSingleUserByIdFromDB = async (
 
   const addToSetQuery = { hobbies: {} };
 
-  if (duplicateHobbies?.length > 0 || typeof duplicateHobbies === 'undefined') {
-    addToSetQuery.hobbies = { $each: [] };
+  if (duplicateHobbies?.length === 0 || typeof duplicateHobbies === 'undefined') {
+    addToSetQuery.hobbies = { $each: duplicateHobbies };
   } else {
     addToSetQuery.hobbies = { $each: reqInputData?.hobbies };
   }
@@ -153,7 +153,7 @@ const updateSingleUserByIdFromDB = async (
         },
         $addToSet: {
           hobbies: addToSetQuery.hobbies,
-          orders: {$each: reqInputData?.orders || []},
+          orders: reqInputData?.orders,
         },
       },
       { new: true },

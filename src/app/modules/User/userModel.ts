@@ -88,7 +88,7 @@ const userSchema = new Schema<IUser, UserModel>({
   },
   hobbies: {
     type: Array,
-    default: null,
+    default: [],
   },
   address: {
     type: AddressSchema,
