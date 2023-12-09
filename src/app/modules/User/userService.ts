@@ -2,6 +2,7 @@ import { IOrders, IUser } from './userInterface';
 import { User } from './userModel';
 import CustomError from '../../utils/CustomError';
 import { PasswordStrategy } from '../../utils/PasswordStrategy';
+import { number } from 'zod';
 
 const createUserIntoDB = async (userRequestData: IUser) => {
   const isUserExist = await User.isUserExist(userRequestData?.userId);
@@ -27,8 +28,7 @@ const createUserIntoDB = async (userRequestData: IUser) => {
     const newUser = await User.create({
       ...projectedData,
       password: finalPass,
-      hobbies: filteredDuplicateHobbies,
-      orders: filteredDuplicateOrders,
+      hobbies: filteredDuplicateHobbies
     });
     return newUser;
   } else {
@@ -40,7 +40,7 @@ const getSingleUserByIdFromDB = async (userId: number) => {
   const isUserExist = await User.isUserExist(userId);
 
   if (isUserExist) {
-    const foundUser = await User.findOne({ userId }, { _id: 0 });
+    const foundUser = await User.findOne({ userId }, { _id: 0, orders: 0 });
     return foundUser;
   } else {
     throw new CustomError('User is not found or registered yet.', 404);
@@ -89,29 +89,36 @@ const updateSingleUserByIdFromDB = async (
       (reqInputData?.hobbies || []).indexOf(newHobby) !== index,
   );
 
-  const duplicateOrders = reqInputData?.orders?.filter(
-    (order, index) =>
+  const duplicateProperties = reqInputData?.orders?.filter(
+    (newOrder, index) =>
       index !==
       (reqInputData?.orders || []).findIndex(
-        (item) => item.productName === order.productName,
+        (self) =>
+          (self.productName === newOrder.productName &&
+            self.price === newOrder.price &&
+            self.quantity === newOrder.quantity) ||
+          (self.productName === newOrder.productName &&
+            (self.price !== newOrder.price ||
+              self.quantity ||
+              newOrder.quantity)),
       ),
   );
 
   if (
     duplicateHobbies &&
     duplicateHobbies.length > 0 &&
-    duplicateOrders &&
-    duplicateOrders.length > 0
+    duplicateProperties &&
+    duplicateProperties.length > 0
   ) {
     throw new CustomError(
       'Multiple duplicate items such as hobbies or orders insrted. Please, insert unique item.',
       406,
-      [...duplicateHobbies, ...duplicateOrders],
+      [[...duplicateHobbies], [...duplicateProperties]],
     );
   } else if (duplicateHobbies && duplicateHobbies.length > 0) {
     throw new CustomError('Duplicate hobby added.', 406, duplicateHobbies);
-  } else if (duplicateOrders && duplicateOrders.length > 0) {
-    throw new CustomError('Duplicate order added.', 406, duplicateOrders);
+  } else if (duplicateProperties && duplicateProperties.length > 0) {
+    throw new CustomError('Duplicate order added.', 406, duplicateProperties);
   } else {
   }
 
@@ -146,7 +153,7 @@ const updateSingleUserByIdFromDB = async (
         },
         $addToSet: {
           hobbies: addToSetQuery.hobbies,
-          orders: reqInputData?.orders,
+          orders: {$each: reqInputData?.orders},
         },
       },
       { new: true },

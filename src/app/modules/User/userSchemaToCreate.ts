@@ -101,7 +101,7 @@ const userSchemaToCreate = z.object({
     isActive: z.boolean(),
     hobbies: z.array(z.string()).nullable(),
     address: AddressSchema,
-    orders: z.array(OrdersSchema).nullable(),
+    orders: z.array(OrdersSchema).nullable().optional(),
   }),
 });
 
