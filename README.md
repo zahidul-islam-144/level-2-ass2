@@ -10,7 +10,7 @@
 1. Here userId will be 1 to 10. userId = 1,2,3......10
 2. userId, userName and email field are unique.
 
-### There are some unexpected error occurs not always but sometimes during PUT request after deploying my api's in Vercel. But in my api testing tool like as postMan/Insomnia and local host, it works perfectly. 
+
 
 ## Create User 
 #### POST : level-2-assignment-2-zislam.vercel.app/api/users
