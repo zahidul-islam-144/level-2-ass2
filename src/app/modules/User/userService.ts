@@ -153,7 +153,7 @@ const updateSingleUserByIdFromDB = async (
         },
         $addToSet: {
           hobbies: addToSetQuery.hobbies,
-          orders: {$each: reqInputData?.orders},
+          orders: {$each: reqInputData?.orders || []},
         },
       },
       { new: true },
