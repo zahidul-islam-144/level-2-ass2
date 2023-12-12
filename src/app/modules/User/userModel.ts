@@ -117,6 +117,7 @@ userSchema.statics.isVerified = async (userId: number, newPassword: string = '')
     'VERIFY',
   );
   const finalPass = await passwordHandler.modifiedPassword();
+  console.log('---> userModel:', newPassword, finalPass)
   return finalPass;
 }
 

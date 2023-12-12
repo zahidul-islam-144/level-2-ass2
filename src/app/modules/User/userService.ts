@@ -2,7 +2,7 @@ import { IOrders, IUser } from './userInterface';
 import { User } from './userModel';
 import CustomError from '../../utils/CustomError';
 import { PasswordStrategy } from '../../utils/PasswordStrategy';
-import { number } from 'zod';
+import { number, object } from 'zod';
 
 const createUserIntoDB = async (userRequestData: IUser) => {
   const isUserExist = await User.isUserExist(userRequestData?.userId);
@@ -41,6 +41,7 @@ const getSingleUserByIdFromDB = async (userId: number) => {
 
   if (isUserExist) {
     const foundUser = await User.findOne({ userId }, { _id: 0, orders: 0 });
+    console.log('---> singleUser:', foundUser)
     return foundUser;
   } else {
     throw new CustomError('User is not found or registered yet.', 404);
@@ -69,7 +70,7 @@ const updateSingleUserByIdFromDB = async (
 ) => {
   const isUserExist = await User.isUserExist(userId);
   const user = await User.findOne({ userId });
-  const isVerified = await User.isVerified(userId, reqInputData?.password);
+  const isVerified = (reqInputData?.password && reqInputData?.password?.length > 0) && await User.isVerified(userId, (reqInputData?.password));
   let updatedPass;
 
   if (reqInputData?.password && reqInputData?.password?.length > 0) {
@@ -83,13 +84,33 @@ const updateSingleUserByIdFromDB = async (
       : await passwordHandler.modifiedPassword();
     // handle hashing whether password is updated or not. If not updated, then isVerified will be true.
   }
+  console.log('---> dbPassword:',user?.password);
+  console.log('---> updatedPass:',isVerified, updatedPass);
 
-  const duplicateHobbies = (reqInputData?.hobbies || []).filter(
+  const { fullName, address, hobbies, orders, ...othersInputData } = reqInputData;
+  const modifiedUpdatedData: Record<string, unknown> = {...othersInputData};
+
+  if(fullName && Object.keys(fullName).length){
+    for (const [key, value] of Object.entries(fullName)) {
+      modifiedUpdatedData[`fullName.${key}`] = value;
+    }
+  }
+
+  if(address && Object.keys(address).length){
+    for (const [key, value] of Object.entries(address)) {
+      modifiedUpdatedData[`address.${key}`] = value;
+    }
+  }
+  // console.log('---> modifiedUpdatedData:', modifiedUpdatedData)
+
+
+
+  const duplicateHobbies = (hobbies || []).filter(
     (newHobby, index) =>
       (reqInputData?.hobbies || []).indexOf(newHobby) !== index,
   );
 
-  const duplicateProperties = reqInputData?.orders?.filter(
+  const duplicateProperties = orders?.filter(
     (newOrder, index) =>
       index !==
       (reqInputData?.orders || []).findIndex(
@@ -127,33 +148,17 @@ const updateSingleUserByIdFromDB = async (
   if (duplicateHobbies?.length === 0 || typeof duplicateHobbies === 'undefined') {
     addToSetQuery.hobbies = { $each: duplicateHobbies };
   } else {
-    addToSetQuery.hobbies = { $each: reqInputData?.hobbies };
+    addToSetQuery.hobbies = { $each: hobbies };
   }
 
   if (isUserExist) {
     const targetUser = await User.findOneAndUpdate(
       { userId },
       {
-        $set: {
-          userId: reqInputData?.userId,
-          userName: reqInputData?.userName,
-          password: updatedPass,
-          fullName: {
-            firstName: reqInputData?.fullName?.firstName,
-            lastName: reqInputData?.fullName?.lastName,
-          },
-          age: reqInputData?.age,
-          email: reqInputData?.email,
-          isActive: reqInputData?.isActive,
-          address: {
-            street: reqInputData?.address?.street,
-            city: reqInputData?.address?.city,
-            country: reqInputData?.address?.country,
-          },
-        },
+        modifiedUpdatedData,
         $addToSet: {
           hobbies: addToSetQuery.hobbies,
-          orders: reqInputData?.orders,
+          orders: orders,
         },
       },
       { new: true },
