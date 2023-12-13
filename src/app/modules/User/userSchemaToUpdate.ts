@@ -1,55 +1,5 @@
 import { ZodError, z } from 'zod';
 
-const PasswordSchema = z
-  .string()
-  .refine((password) => {
-    const regexPatterns = [
-      // {
-      //   pattern: /^$|\s+/,
-      //   message: 'No white space character is allowed.',
-      //   path: ['password']
-      // },
-      {
-        pattern: /[a-z]/,
-        message: 'Password must contain at least one lowercase letter',
-        path: ['password'],
-      },
-      {
-        pattern: /[A-Z]/,
-        message: 'Password must contain at least one uppercase letter',
-        path: ['password'],
-      },
-      {
-        pattern: /[0-9]/,
-        message: 'Password must contain at least one digit',
-        path: ['password'],
-      },
-      {
-        pattern: /[^a-zA-Z0-9]/,
-        message: 'Password must contain at least one special character',
-        path: ['password'],
-      },
-      {
-        pattern: /^.{6,8}$/,
-        message: 'Password must be 6-8 characters long.',
-        path: ['password'],
-      },
-    ];
-
-    const failedAttempts = regexPatterns.reduce((errors: any, pattern) => {
-      if (!pattern.pattern.test(password)) {
-        errors.push({ message: pattern.message, path: pattern.path });
-      }
-      return errors;
-    }, []);
-
-    if (failedAttempts.length > 0) {
-      throw new ZodError(failedAttempts);
-    } else {
-      return true;
-    }
-  })
-  .optional();
 
 const FullNameSchema = z.object({
   firstName: z
@@ -92,11 +42,11 @@ const userSchemaToUpdate = z.object({
       .positive('User Id must be positive digit.')
       .optional(),
     userName: z.string().min(1, 'User name cannot be empty').optional(),
-    password: z   
-    .string()
-    .min(1, { message: 'Password can not be empty.' })
-    .max(10, { message: 'password can not exceed 10 characters or more.' })
-    .optional(),
+    password: z
+      .string()
+      .min(5, { message: 'Password length can not be less than 5 characters.' })
+      .max(10, { message: 'password can not exceed 10 characters or more.' })
+      .optional(),
     fullName: FullNameSchema.optional(),
     age: z
       .number()

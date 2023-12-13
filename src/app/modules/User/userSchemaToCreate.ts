@@ -1,52 +1,5 @@
 import { ZodError, z, ZodIssue } from 'zod';
 
-const PasswordSchema = z.string().refine((password) => {
-  const regexPatterns = [
-    // {
-    //   pattern: /^$|\s+/,
-    //   message: 'No white space character is allowed.',
-    //   path: ['password']
-    // },
-    {
-      pattern: /[a-z]/,
-      message: 'Password must contain at least one lowercase letter',
-      path: ['password'],
-    },
-    {
-      pattern: /[A-Z]/,
-      message: 'Password must contain at least one uppercase letter',
-      path: ['password'],
-    },
-    {
-      pattern: /[0-9]/,
-      message: 'Password must contain at least one digit',
-      path: ['password'],
-    },
-    {
-      pattern: /[^a-zA-Z0-9]/,
-      message: 'Password must contain at least one special character',
-      path: ['password'],
-    },
-    {
-      pattern: /^.{6,8}$/,
-      message: 'Password must be 6-8 characters long.',
-      path: ['password'],
-    },
-  ];
-
-  const failedAttempts = regexPatterns.reduce((errors: any, pattern) => {
-    if (!pattern.pattern.test(password)) {
-      errors.push({ message: pattern.message, path: pattern.path });
-    }
-    return errors;
-  }, []);
-
-  if (failedAttempts.length > 0) {
-    throw new ZodError(failedAttempts);
-  } else {
-    return true;
-  }
-});
 
 const FullNameSchema = z.object({
   firstName: z
@@ -88,7 +41,7 @@ const userSchemaToCreate = z.object({
     userName: z.string().min(1, { message: 'User name cannot be empty' }),
     password: z
       .string()
-      .min(1, { message: 'Password can not be empty.' })
+      .min(5, { message: 'Password length can not be less than 5 characters.' })
       .max(10, { message: 'password can not exceed 10 characters or more.' }),
     fullName: FullNameSchema,
     age: z
