@@ -86,7 +86,10 @@ const userSchemaToCreate = z.object({
       .int()
       .positive({ message: 'User Id must be positive digit.' }),
     userName: z.string().min(1, { message: 'User name cannot be empty' }),
-    password: PasswordSchema,
+    password: z
+      .string()
+      .min(1, { message: 'Password can not be empty.' })
+      .max(10, { message: 'password can not exceed 10 characters or more.' }),
     fullName: FullNameSchema,
     age: z
       .number()
@@ -106,3 +109,11 @@ const userSchemaToCreate = z.object({
 });
 
 export default userSchemaToCreate;
+
+/*
+The method .trim() you used in the code snippet will remove the whitespaces from both ends of the string.
+If for some reason you want to filter all whitespaces use .transform()
+
+z.string().transform(value => value.replaceAll(" ", ""))
+
+*/
