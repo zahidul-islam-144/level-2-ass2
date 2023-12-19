@@ -84,8 +84,8 @@ const updateSingleUserByIdFromDB = async (
       : await passwordHandler.modifiedPassword();
     // handle hashing whether password is updated or not. If not updated, then isVerified will be true.
   }
-  console.log('---> dbPassword:',user?.password);
-  console.log('---> updatedPass:',isVerified, updatedPass);
+  // console.log('---> dbPassword:',user?.password);
+  // console.log('---> updatedPass:',isVerified, updatedPass);
 
   const { fullName, address, hobbies, orders, ...othersInputData } = reqInputData;
   const modifiedUpdatedData: Record<string, unknown> = {...othersInputData};
@@ -101,16 +101,13 @@ const updateSingleUserByIdFromDB = async (
       modifiedUpdatedData[`address.${key}`] = value;
     }
   }
-  // console.log('---> modifiedUpdatedData:', modifiedUpdatedData)
-
-
 
   const duplicateHobbies = (hobbies || []).filter(
     (newHobby, index) =>
       (reqInputData?.hobbies || []).indexOf(newHobby) !== index,
   );
 
-  const duplicateProperties = orders?.filter(
+  const duplicateOrderProperties = orders?.filter(
     (newOrder, index) =>
       index !==
       (reqInputData?.orders || []).findIndex(
@@ -125,43 +122,51 @@ const updateSingleUserByIdFromDB = async (
       ),
   );
 
+  const deletedOrderLists = (user?.orders  || []).filter((existingOrder) =>
+    (reqInputData?.orders || []).some(
+      (newOrder) => newOrder.productName === existingOrder.productName,
+    ),
+  );
+
   if (
     duplicateHobbies &&
     duplicateHobbies.length > 0 &&
-    duplicateProperties &&
-    duplicateProperties.length > 0
+    duplicateOrderProperties &&
+    duplicateOrderProperties.length > 0
   ) {
     throw new CustomError(
       'Multiple duplicate items such as hobbies or orders insrted. Please, insert unique item.',
       406,
-      [[...duplicateHobbies], [...duplicateProperties]],
+      [[...duplicateHobbies], [...duplicateOrderProperties]],
     );
   } else if (duplicateHobbies && duplicateHobbies.length > 0) {
     throw new CustomError('Duplicate hobby added.', 406, duplicateHobbies);
-  } else if (duplicateProperties && duplicateProperties.length > 0) {
-    throw new CustomError('Duplicate order added.', 406, duplicateProperties);
+  } else if (duplicateOrderProperties && duplicateOrderProperties.length > 0) {
+    throw new CustomError('Duplicate order added.', 406, duplicateOrderProperties);
   } else {
   }
 
   const addToSetQuery = { hobbies: {} };
 
-  if (duplicateHobbies?.length === 0 || typeof duplicateHobbies === 'undefined') {
-    addToSetQuery.hobbies = { $each: duplicateHobbies };
-  } else {
+  if (!duplicateHobbies?.length) {
     addToSetQuery.hobbies = { $each: hobbies };
-  }
+  } 
 
   if (isUserExist) {
+    await User.updateOne({userId}, {
+      $pull: { orders: { $in: deletedOrderLists } },
+    })
+
     const targetUser = await User.findOneAndUpdate(
       { userId },
       {
-        modifiedUpdatedData,
+        ...modifiedUpdatedData,
         $addToSet: {
           hobbies: addToSetQuery.hobbies,
           orders: orders,
         },
       },
-      { new: true },
+      { new: true,  runValidators: true, },
     );
     return targetUser;
   } else {
@@ -246,6 +251,8 @@ const getTotalPriceOfSingleUserFromDB = async (userId: number) => {
     throw new CustomError('User is not found or registered yet.', 404);
   }
 };
+
+
 
 export const userService = {
   createUserIntoDB,
