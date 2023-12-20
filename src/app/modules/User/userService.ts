@@ -84,11 +84,11 @@ const updateSingleUserByIdFromDB = async (
       : await passwordHandler.modifiedPassword();
     // handle hashing whether password is updated or not. If not updated, then isVerified will be true.
   }
-  // console.log('---> dbPassword:',user?.password);
-  // console.log('---> updatedPass:',isVerified, updatedPass);
+  console.log('---> dbPassword:',user?.password);
+  console.log('---> updatedPass:',isVerified, updatedPass);
 
-  const { fullName, address, hobbies, orders, ...othersInputData } = reqInputData;
-  const modifiedUpdatedData: Record<string, unknown> = {...othersInputData};
+  const { fullName, address, hobbies, orders, password, ...othersInputData } = reqInputData;
+  const modifiedUpdatedData: Record<string, unknown> = {...othersInputData, password: updatedPass};
 
   if(fullName && Object.keys(fullName).length){
     for (const [key, value] of Object.entries(fullName)) {
