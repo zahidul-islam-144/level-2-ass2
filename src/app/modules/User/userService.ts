@@ -148,9 +148,11 @@ const updateSingleUserByIdFromDB = async (
 
   const addToSetQuery = { hobbies: {} };
 
-  if (!duplicateHobbies?.length) {
+  if (hobbies && hobbies?.length > 0) {
     addToSetQuery.hobbies = { $each: hobbies };
-  } 
+  }else{
+    addToSetQuery.hobbies = { $each: [] };
+  }
 
   if (isUserExist) {
     await User.updateOne({userId}, {
