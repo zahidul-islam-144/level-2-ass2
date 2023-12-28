@@ -7,8 +7,8 @@
 4. npm run start:prod (for production)
 
 #### NOTE: 
-1. Here userId will be 1 to 10. userId = 1,2,3......10
-2. userId, username and email field are unique.
+1. For testings two items added and their userId is 1 and 2
+2. userId, username and email field are unique field. Kindly make sure it before inserting data.
 
 
 
