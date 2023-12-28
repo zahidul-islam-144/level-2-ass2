@@ -41,11 +41,9 @@ const userSchemaToUpdate = z.object({
       .int()
       .positive('User Id must be positive digit.')
       .optional(),
-    userName: z.string().min(1, 'User name cannot be empty').optional(),
+    username: z.string().min(1, 'User name cannot be empty').optional(),
     password: z
       .string()
-      .min(5, { message: 'Password length can not be less than 5 characters.' })
-      .max(10, { message: 'password can not exceed 10 characters or more.' })
       .optional(),
     fullName: FullNameSchema.optional(),
     age: z

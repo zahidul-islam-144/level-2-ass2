@@ -8,7 +8,7 @@
 
 #### NOTE: 
 1. Here userId will be 1 to 10. userId = 1,2,3......10
-2. userId, userName and email field are unique.
+2. userId, username and email field are unique.
 
 
 

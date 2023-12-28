@@ -57,7 +57,7 @@ const userSchema = new Schema<IUser, UserModel>({
     unique: true,
     required: [true, 'User Id is expected.'],
   },
-  userName: {
+  username: {
     type: String,
     unique: true,
     required: [true, 'User Name is expected.'],

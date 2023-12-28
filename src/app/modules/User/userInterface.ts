@@ -19,7 +19,7 @@ export interface IOrders {
 
 export interface IUser {
     userId: number;
-    userName: string;
+    username: string;
     password: string;
     fullName: IFullName;
     age: number;

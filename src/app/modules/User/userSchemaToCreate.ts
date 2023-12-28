@@ -38,11 +38,9 @@ const userSchemaToCreate = z.object({
       .number()
       .int()
       .positive({ message: 'User Id must be positive digit.' }),
-    userName: z.string().min(1, { message: 'User name cannot be empty' }),
+    username: z.string().min(1, { message: 'User name cannot be empty' }),
     password: z
-      .string()
-      .min(5, { message: 'Password length can not be less than 5 characters.' })
-      .max(10, { message: 'password can not exceed 10 characters or more.' }),
+      .string(),
     fullName: FullNameSchema,
     age: z
       .number()
