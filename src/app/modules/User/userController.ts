@@ -115,16 +115,14 @@ const addOrderByUserId = catchAsync(
       +userId,
       reqBody,
     );
-
-    if (targetUser?.modifiedCount) {
-      const customResponse = new CustomResponse(res);
-      customResponse.sendResponse({
-        statusCode: 201,
-        success: true,
-        message: 'Order created successfully!',
-        data: null,
-      });
-    }
+    console.log('targetUser', targetUser)
+    const customResponse = new CustomResponse(res);
+    customResponse.sendResponse({
+      statusCode: 201,
+      success: true,
+      message: 'Order created successfully!',
+      data: null,
+    });
   },
 );
 
@@ -141,7 +139,7 @@ const getTotalPriceOfSingleUser = catchAsync(
       success: true,
       message: hasPrice
         ? 'Total price calculated successfully!'
-        : 'No Orders found for this user. Kindly, add new order.',
+        : 'Total calculation is not possible without having any order. Kindly, do order at first.',
       data: hasPrice ? getTotalPrice[0] : [],
     });
   },

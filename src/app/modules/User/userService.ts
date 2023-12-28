@@ -40,8 +40,7 @@ const getSingleUserByIdFromDB = async (userId: number) => {
   const isUserExist = await User.isUserExist(userId);
 
   if (isUserExist) {
-    const foundUser = await User.findOne({ userId }, { _id: 0, orders: 0 });
-    console.log('---> singleUser:', foundUser)
+    const foundUser = await User.findOne({ userId }, { _id: 0 });
     return foundUser;
   } else {
     throw new CustomError('User is not found or registered yet.', 404);
@@ -84,8 +83,6 @@ const updateSingleUserByIdFromDB = async (
       : await passwordHandler.modifiedPassword();
     // handle hashing whether password is updated or not. If not updated, then isVerified will be true.
   }
-  console.log('---> dbPassword:',user?.password);
-  console.log('---> updatedPass:',isVerified, updatedPass);
 
   const { fullName, address, hobbies, orders, password, ...othersInputData } = reqInputData;
   const modifiedUpdatedData: Record<string, unknown> = {...othersInputData, password: updatedPass};
@@ -102,49 +99,12 @@ const updateSingleUserByIdFromDB = async (
     }
   }
 
-  const duplicateHobbies = (hobbies || []).filter(
-    (newHobby, index) =>
-      (reqInputData?.hobbies || []).indexOf(newHobby) !== index,
-  );
-
-  const duplicateOrderProperties = orders?.filter(
-    (newOrder, index) =>
-      index !==
-      (reqInputData?.orders || []).findIndex(
-        (self) =>
-          (self.productName === newOrder.productName &&
-            self.price === newOrder.price &&
-            self.quantity === newOrder.quantity) ||
-          (self.productName === newOrder.productName &&
-            (self.price !== newOrder.price ||
-              self.quantity ||
-              newOrder.quantity)),
-      ),
-  );
 
   const deletedOrderLists = (user?.orders  || []).filter((existingOrder) =>
     (reqInputData?.orders || []).some(
       (newOrder) => newOrder.productName === existingOrder.productName,
     ),
   );
-
-  if (
-    duplicateHobbies &&
-    duplicateHobbies.length > 0 &&
-    duplicateOrderProperties &&
-    duplicateOrderProperties.length > 0
-  ) {
-    throw new CustomError(
-      'Multiple duplicate items such as hobbies or orders insrted. Please, insert unique item.',
-      406,
-      [[...duplicateHobbies], [...duplicateOrderProperties]],
-    );
-  } else if (duplicateHobbies && duplicateHobbies.length > 0) {
-    throw new CustomError('Duplicate hobby added.', 406, duplicateHobbies);
-  } else if (duplicateOrderProperties && duplicateOrderProperties.length > 0) {
-    throw new CustomError('Duplicate order added.', 406, duplicateOrderProperties);
-  } else {
-  }
 
   const addToSetQuery = { hobbies: {} };
 
@@ -195,31 +155,32 @@ const addOrderByUserIdIntoDB = async (
   reqInputData: IOrders,
 ) => {
   const isUserExist = await User.isUserExist(userId);
-  const getExistingorders = await User.findOne(
-    { userId },
-    { orders: { $elemMatch: { productName: reqInputData?.productName } } },
-    { orders: { productName: 1 } },
-  );
-  const isExistOrder =
-    getExistingorders?.orders && getExistingorders?.orders?.length > 0
-      ? true
-      : false;
+  // const getExistingorders = await User.findOne(
+  //   { userId },
+  //   { orders: { $elemMatch: { productName: reqInputData?.productName } } },
+  //   { orders: { productName: 1 } },
+  // );
+  // const isExistOrder =
+  //   getExistingorders?.orders && getExistingorders?.orders?.length > 0
+  //     ? true
+  //     : false;
+
+  console.log('reqInputData', reqInputData)
+  if(!Object.keys(reqInputData).length){
+    throw new CustomError(
+      'Failed to create order. Empty space can not be an order.',
+      406,
+    );
+  }
 
   if (isUserExist) {
-    if (!isExistOrder) {
-      const targetUserOrder = await User.updateOne(
-        { userId },
-        {
-          $addToSet: { orders: reqInputData },
-        },
-      );
-      return targetUserOrder;
-    } else {
-      throw new CustomError(
-        'Order has already been created. Try again with different one',
-        404,
-      );
-    }
+    const targetUserOrder = await User.updateOne(
+      { userId },
+      {
+        $addToSet: { orders: { $each: [reqInputData] } },
+      },
+    );
+    return targetUserOrder;
   } else {
     throw new CustomError(
       'Failed to create order. User is not found or registered yet.',
@@ -266,3 +227,44 @@ export const userService = {
   addOrderByUserIdIntoDB,
   getTotalPriceOfSingleUserFromDB,
 };
+
+
+// ------- comented codes are for my extra validation purpose -------
+
+  // const duplicateHobbies = (hobbies || []).filter(
+  //   (newHobby, index) =>
+  //     (reqInputData?.hobbies || []).indexOf(newHobby) !== index,
+  // );
+
+  // const duplicateOrderProperties = orders?.filter(
+  //   (newOrder, index) =>
+  //     index !==
+  //     (reqInputData?.orders || []).findIndex(
+  //       (self) =>
+  //         (self.productName === newOrder.productName &&
+  //           self.price === newOrder.price &&
+  //           self.quantity === newOrder.quantity) ||
+  //         (self.productName === newOrder.productName &&
+  //           (self.price !== newOrder.price ||
+  //             self.quantity ||
+  //             newOrder.quantity)),
+  //     ),
+  // );
+
+  // if (
+  //   duplicateHobbies &&
+  //   duplicateHobbies.length > 0 &&
+  //   duplicateOrderProperties &&
+  //   duplicateOrderProperties.length > 0
+  // ) {
+  //   throw new CustomError(
+  //     'Multiple duplicate items such as hobbies or orders insrted. Please, insert unique item.',
+  //     406,
+  //     [[...duplicateHobbies], [...duplicateOrderProperties]],
+  //   );
+  // } else if (duplicateHobbies && duplicateHobbies.length > 0) {
+  //   throw new CustomError('Duplicate hobby added.', 406, duplicateHobbies);
+  // } else if (duplicateOrderProperties && duplicateOrderProperties.length > 0) {
+  //   throw new CustomError('Duplicate order added.', 406, duplicateOrderProperties);
+  // } else {
+  // }
